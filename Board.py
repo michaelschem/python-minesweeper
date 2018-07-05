@@ -7,7 +7,7 @@ class Board:
 	height = 10
 	board = None
 	ui = None
-	# ui_buttons = None
+	neighbors = [[-1,-1],[-1,1],[-1,0],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
 
 	def __init__(self):
 		self.ui = tkinter.Tk()
@@ -27,44 +27,51 @@ class Board:
 				if cell.val != "M":
 					self.board[r_key][c_key].val = self.count_neighbors(r_key,c_key)
 
-	def count_neighbors(self,r_key,c_key):
+	def count_neighbors(self, r_key, c_key):
 		count = 0
 
-		count += self.has_mine_relative(r_key -1,c_key -1)
-		count += self.has_mine_relative(r_key -1,c_key)
-		count += self.has_mine_relative(r_key -1,c_key +1)
-
-		count += self.has_mine_relative(r_key,c_key -1)
-		count += self.has_mine_relative(r_key,c_key +1)
-
-		count += self.has_mine_relative(r_key +1,c_key -1)
-		count += self.has_mine_relative(r_key +1,c_key)
-		count += self.has_mine_relative(r_key +1,c_key +1)
+		for i in self.neighbors:
+			count += self.has_relative("M",r_key + i[0],c_key + i[1])
 
 		return count
 
-	def has_mine_relative(self,r,c):
+	def expand_neighbors(self,r_key,c_key):
+		for i in self.neighbors:
+			if self.has_relative(0,r_key + i[0],c_key + i[1]) == 1:
+				self.board[r_key + i[0]][c_key + i[1]]["text"] = 0
+				self.expand_neighbors(r_key + i[0],c_key + i[1])
+
+	def has_relative(self, type, r, c):
 		if r < 0 or c < 0:
 			return 0
 		if c > self.width -1 or r > self.height -1:
 			return 0
-		if self.board[r][c].val == "M":
+		if self.board[r][c].val == type:
 			return 1
 		else:
 			return 0
 
-	def click(self,r,c):
+	def click(self, r, c):
 		self.board[r][c]["text"] = self.board[r][c].val
+		if self.board[r][c].val == 0:
+			self.expand_neighbors(r,c)
+		# self.board[r][c]["highlightbackground"] = "#8EF0F7",
 
-	def print(self):
+	def display(self):
 		for r_key,row in enumerate(self.board):
 			for c_key,cell in enumerate(row):
 				self.board[r_key][c_key]["text"] = " "
 
+				# tkinter.ttk.Style().configure('green/black.TButton', foreground='green', background='black')
+
+				self.board[r_key][c_key]["command"] = lambda r_key=r_key, c_key=c_key: self.click(r_key, c_key)
+
+				# self.board[r_key][c_key]["style"]='green/black.TButton'
+
 				self.board[r_key][c_key].grid(
 					row=r_key,
-					column=c_key%self.width)
+					column=c_key % self.width)
 
-				self.board[r_key][c_key]["command"] = lambda r_key=r_key,c_key=c_key: self.click(r_key,c_key)
+
 
 		self.ui.mainloop()
