@@ -1,13 +1,13 @@
-import random,tkinter,math
+import random,tkinter,threading
 
 from Mine_Button import Mine_Button
 
 class Board:
-	width = 10
-	height = 10
+	width = 20
+	height = 20
 	board = None
 	ui = None
-	neighbors = [[-1,-1],[-1,1],[-1,0],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+	neighbors = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
 
 	def __init__(self):
 		self.ui = tkinter.Tk()
@@ -36,10 +36,24 @@ class Board:
 		return count
 
 	def expand_neighbors(self,r_key,c_key):
-		for i in self.neighbors:
-			if self.has_relative(0,r_key + i[0],c_key + i[1]) == 1:
-				self.board[r_key + i[0]][c_key + i[1]]["text"] = 0
-				self.expand_neighbors(r_key + i[0],c_key + i[1])
+		# if not self.board[r_key][c_key].hidden:
+		# 	return
+		if r_key < 0 or c_key < 0:
+			return
+		if c_key > self.width -1 or r_key > self.height -1:
+			return
+
+		cell = self.board[r_key][c_key]
+		if cell.val == 0:
+			cell.show()
+			for i in self.neighbors:
+				if self.has_relative(0,r_key + i[0],c_key + i[1]) == 1 and self.board[r_key + i[0]][c_key + i[1]].hidden:
+					self.board[r_key + i[0]][c_key + i[1]].show()
+					self.expand_neighbors(r_key + i[0],c_key + i[1])
+				elif i[0] != -1 and i[1] != -1 and r_key + i[0] < self.height and c_key + i[1] < self.width:
+					self.board[r_key + i[0]][c_key + i[1]].show()
+		else:
+			cell.show()
 
 	def has_relative(self, type, r, c):
 		if r < 0 or c < 0:
@@ -52,15 +66,15 @@ class Board:
 			return 0
 
 	def click(self, r, c):
-		self.board[r][c]["text"] = self.board[r][c].val
 		if self.board[r][c].val == 0:
 			self.expand_neighbors(r,c)
+		self.board[r][c].show()
 		# self.board[r][c]["highlightbackground"] = "#8EF0F7",
 
 	def display(self):
 		for r_key,row in enumerate(self.board):
 			for c_key,cell in enumerate(row):
-				self.board[r_key][c_key]["text"] = " "
+				self.board[r_key][c_key]["text"] = self.board[r_key][c_key].val
 
 				# tkinter.ttk.Style().configure('green/black.TButton', foreground='green', background='black')
 
@@ -73,5 +87,5 @@ class Board:
 					column=c_key % self.width)
 
 
-
-		self.ui.mainloop()
+		UI_Thread = threading.Thread(target=self.ui.mainloop())
+		UI_Thread.start()
