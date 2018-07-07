@@ -8,11 +8,13 @@ class Board:
 	total_mines = 99
 	board = None
 	ui = None
+	game_running = None
 	neighbor_offsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
 
 	def __init__(self):
 		self.ui = tkinter.Tk()
 		self.board = [[Mine_Button(self.ui) for j in range(self.width)] for i in range(self.height)]
+		self.game_running = True
 		# self.ui_buttons = [[0 for j in range(self.width)] for i in range(self.height)]
 
 	def drop_mines(self):
@@ -23,7 +25,6 @@ class Board:
 	def place_count(self):
 		for r_key,row in enumerate(self.board):
 			for c_key,cell in enumerate(row):
-				# self.print(highlight=True,special_coords={"c":c_key,"r":r_key})
 				if cell.val != "M":
 					self.board[r_key][c_key].val = self.count_neighbors(r_key,c_key)
 
@@ -59,14 +60,18 @@ class Board:
 			return False
 
 	def click(self, r, c):
+		if not self.game_running:
+			return
 		self.board[r][c].show()
 		if self.board[r][c].val == 0:
 			self.expand_zeros(r,c)
-			# self.expand_frindge()
+		if self.board[r][c].val == "M":
+			self.lose()
 
 		# self.board[r][c]["highlightbackground"] = "#8EF0F7",
 
 	def display(self):
+
 		for r_key,row in enumerate(self.board):
 			for c_key,cell in enumerate(row):
 				self.board[r_key][c_key]["text"] = self.board[r_key][c_key].val
@@ -81,6 +86,12 @@ class Board:
 					row=r_key,
 					column=c_key % self.width)
 
-
 		UI_Thread = threading.Thread(target=self.ui.mainloop())
 		UI_Thread.start()
+
+	def lose(self):
+		self.game_running = False
+		for row in self.board:
+			for cell in row:
+				if cell.val == "M":
+					cell.explode()

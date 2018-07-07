@@ -15,3 +15,8 @@ class Mine_Button(tkinter.Button):
 		self["text"] = self.val
 		self.shown = True
 		self["highlightbackground"] = "#8EF0F7"
+
+	def explode(self):
+		self["highlightbackground"] = 'red'
+		self["text"] = self.val
+		self.shown = True
