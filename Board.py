@@ -1,4 +1,4 @@
-import random,tkinter,threading,math
+import random,tkinter,threading,math,copy
 
 from Mine_Button import Mine_Button
 
@@ -8,7 +8,7 @@ class Board:
 	total_mines = 99
 	board = None
 	ui = None
-	neighbors = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
+	neighbor_offsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]
 
 	def __init__(self):
 		self.ui = tkinter.Tk()
@@ -17,7 +17,7 @@ class Board:
 
 	def drop_mines(self):
 		while self.total_mines > 0:
-			self.board[math.floor((random.random() * 10) % self.height)][math.floor((random.random() * 10) % self.width)].val = "M"
+			self.board[math.floor((random.random() * self.height) % self.height)][math.floor((random.random() * self.width) % self.width)].val = "M"
 			self.total_mines -= 1
 
 	def place_count(self):
@@ -30,33 +30,23 @@ class Board:
 	def count_neighbors(self, r_key, c_key):
 		count = 0
 
-		for i in self.neighbors:
+		for i in self.neighbor_offsets:
 			if self.safe_check("M", r_key + i[0], c_key + i[1]):
 				count += 1
 
 		return count
 
-	def expand_zeros(self):
-		for r_key,row in enumerate(self.board):
-			for c_key,cell in enumerate(row):
-				if not cell.hidden:
-					for i in self.neighbors:
-						if self.safe_check(0, r_key + i[0], c_key + i[1]) and self.board[r_key + i[0]][c_key + i[1]].hidden:
-							self.board[r_key + i[0]][c_key + i[1]].show()
-							self.expand_zeros()
+	def expand_zeros(self,r,c):
+		for i in self.neighbor_offsets:
+			neighbor_r = r + i[0]
+			neighbor_c = c + i[1]
 
-	def expand_frindge(self):
-		positions_to_check = []
-		for r_key,row in enumerate(self.board):
-			for c_key,cell in enumerate(row):
-				if not cell.hidden and not cell.locked:
-					positions_to_check.append({"r":r_key,"c":c_key})
-
-		for position in positions_to_check:
-			for i in self.neighbors:
-				if position["r"] + i[0] < self.height and position["c"] + i[1] < self.width and position["r"] + i[0] != -1 and position["c"] + i[1] != -1:
-					self.board[position["r"] + i[0]][position["c"] + i[1]].show()
-					self.board[position["r"] + i[0]][position["c"] + i[1]].locked = True
+			if self.safe_check(0, neighbor_r, neighbor_c) \
+					and not self.board[neighbor_r][neighbor_c].shown:
+				self.board[r + i[0]][c + i[1]].show()
+				self.expand_zeros(neighbor_r,neighbor_c)
+			elif r + i[0] > 0 and c + i[1] > 0 and r + i[0] < self.height and c + i[1] < self.width:
+				self.board[r + i[0]][c + i[1]].show()
 
 	def safe_check(self, type, r, c):
 		if r < 0 or c < 0:
@@ -71,8 +61,8 @@ class Board:
 	def click(self, r, c):
 		self.board[r][c].show()
 		if self.board[r][c].val == 0:
-			self.expand_zeros()
-			self.expand_frindge()
+			self.expand_zeros(r,c)
+			# self.expand_frindge()
 
 		# self.board[r][c]["highlightbackground"] = "#8EF0F7",
 
