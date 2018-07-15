@@ -74,7 +74,7 @@ class Board:
 
 		for r_key,row in enumerate(self.board):
 			for c_key,cell in enumerate(row):
-				self.board[r_key][c_key]["text"] = self.board[r_key][c_key].val
+				self.board[r_key][c_key]["text"] = " "# self.board[r_key][c_key].val
 
 				# tkinter.ttk.Style().configure('green/black.TButton', foreground='green', background='black')
 
@@ -86,8 +86,9 @@ class Board:
 					row=r_key,
 					column=c_key % self.width)
 
-		UI_Thread = threading.Thread(target=self.ui.mainloop())
-		UI_Thread.start()
+		# UI_Thread = threading.Thread(target=self.ui.mainloop())
+		# UI_Thread.start()
+		self.ui.mainloop()
 
 	def lose(self):
 		self.game_running = False
